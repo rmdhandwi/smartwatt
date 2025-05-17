@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "395469830615",
+    "firebase_url": "https://smartwatt-b1cca-default-rtdb.firebaseio.com",
+    "project_id": "smartwatt-b1cca",
+    "storage_bucket": "smartwatt-b1cca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:395469830615:android:b0cfced9b2242c6c483392",
+        "android_client_info": {
+          "package_name": "com.example.smartwatt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBP__3BTsQQ0hr7eA29Of5WlNAQlTLshJQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
