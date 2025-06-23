@@ -27,6 +27,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
+    private var ambangId: String = ""
+    private var batasRuangan1: Float = 0f
+    private var batasRuangan2: Float = 0f
+
 
     private lateinit var pressAnim: android.view.animation.Animation
     private lateinit var releaseAnim: android.view.animation.Animation
@@ -50,7 +54,9 @@ class MainActivity : AppCompatActivity() {
         createNotificationChannel()
         initToggleButton()
         initCardAnimations()
+        ambilAmbangBatas()
         listenToFirebaseData()
+
     }
 
     private fun toggleRuangan() {
@@ -168,7 +174,7 @@ class MainActivity : AppCompatActivity() {
         releaseAnim = AnimationUtils.loadAnimation(this, R.animator.card_release)
 
         setCardAnimation(binding.btnHome) {
-            Toast.makeText(this, "Home clicked", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, SettingActivity::class.java))
         }
 
         setCardAnimation(binding.btnHistory) {
@@ -212,8 +218,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val ket = when (ruangan) {
-            "ruangan1" -> "Daya melebihi 450W di Ruangan 1!"
-            "ruangan2" -> "Daya melebihi 450W di Ruangan 2!"
+            "ruangan1" -> "Daya melebihi ${batasRuangan1}W di Ruangan 1!"
+            "ruangan2" -> "Daya melebihi ${batasRuangan2}W di Ruangan 2!"
             else -> "Tidak Diketahui"
         }
 
@@ -237,6 +243,26 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
+    private fun ambilAmbangBatas() {
+        val ambangRef = FirebaseDatabase.getInstance().getReference("ambang_batas")
+
+        ambangRef.orderByChild("tanggal").limitToLast(1)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (item in snapshot.children) {
+                        ambangId = item.key ?: ""
+                        val r1 = item.child("ruangan1").getValue(Int::class.java) ?: 0f
+                        val r2 = item.child("ruangan2").getValue(Int::class.java) ?: 0f
+                        batasRuangan1 = r1.toFloat()
+                        batasRuangan2 = r2.toFloat()
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@MainActivity, "Gagal ambil ambang batas", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
 
     private fun listenToFirebaseData() {
         val ruangan1Ref = database.child("monitoring").child("ruangan1")
@@ -252,10 +278,11 @@ class MainActivity : AppCompatActivity() {
                 binding.txtAmperA.text = "${amper} A"
                 binding.txtWattA.text = "${watt} W"
 
-                if (watt > 450.0f) {
-                    showNotification(1, "Peringatan Daya - Ruangan 1", "Daya melebihi 450W di Ruangan 1!")
+                if (watt > batasRuangan1) {
+                    showNotification(1, "Peringatan Daya - Ruangan 1", "Daya melebihi ${batasRuangan1}W di Ruangan 1!")
                     simpanRiwayat("ruangan1", volt, amper, watt)
                 }
+
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -273,8 +300,8 @@ class MainActivity : AppCompatActivity() {
                 binding.txtAmperB.text = "${amper} A"
                 binding.txtWattB.text = "${watt} W"
 
-                if (watt > 450.0f) {
-                    showNotification(2, "Peringatan Daya - Ruangan 2", "Daya melebihi 450W di Ruangan 2!")
+                if (watt > batasRuangan2) {
+                    showNotification(2, "Peringatan Daya - Ruangan 2", "Daya melebihi ${batasRuangan2}W di Ruangan 2!")
                     simpanRiwayat("ruangan2", volt, amper, watt)
                 }
             }

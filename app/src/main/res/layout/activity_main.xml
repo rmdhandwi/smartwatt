@@ -1,9 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:gravity="center"
     android:background="@drawable/back2"
     tools:context=".MainActivity">
@@ -87,7 +87,8 @@
         <ScrollView
             android:id="@+id/zonaA"
             android:layout_width="match_parent"
-            android:layout_height="600dp">
+            android:layout_weight="1"
+            android:layout_height="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -260,7 +261,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_black"
-                                android:text="Relay 1"
+                                android:text="Output 1"
                                 android:textAlignment="center"
                                 android:textColor="#208FFE"
                                 android:textSize="18sp"
@@ -306,7 +307,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_black"
-                                android:text="Relay 2"
+                                android:text="Output 2"
                                 android:textAlignment="center"
                                 android:textColor="#208FFE"
                                 android:textSize="18sp"
@@ -348,7 +349,8 @@
         <ScrollView
             android:id="@+id/zonaB"
             android:layout_width="match_parent"
-            android:layout_height="600dp"
+            android:layout_weight="1"
+            android:layout_height="0dp"
             android:visibility="gone">
 
             <LinearLayout
@@ -522,7 +524,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_black"
-                                android:text="Relay 3"
+                                android:text="Output 3"
                                 android:textAlignment="center"
                                 android:textColor="#208FFE"
                                 android:textSize="18sp"
@@ -568,7 +570,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_black"
-                                android:text="Relay 4"
+                                android:text="Output 4"
                                 android:textAlignment="center"
                                 android:textColor="#208FFE"
                                 android:textSize="18sp"
@@ -607,135 +609,130 @@
         </ScrollView>
 
 
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="10dp"
-        app:layout_constraintBottom_toBottomOf="@+id/ly0">
-
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:padding="5dp">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-            <!-- Home Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/btn_home"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginHorizontal="25dp"
-                android:layout_marginVertical="5dp"
-                android:elevation="20dp"
-                app:cardCornerRadius="100dp">
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="5dp">
 
-                <LinearLayout
+                <!-- Home Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/btn_home"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="10dp">
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="25dp"
+                    android:layout_marginVertical="5dp"
+                    android:elevation="20dp"
+                    app:cardCornerRadius="100dp">
 
-                    <ImageView
-                        android:id="@+id/iv_home"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        app:srcCompat="@drawable/ic_home" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Home"
-                        android:fontFamily="@font/poppins"
-                        android:textAlignment="center"
-                        android:textColor="#000"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="10dp">
 
-            <!-- History Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/btn_history"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:elevation="20dp"
-                android:layout_marginHorizontal="25dp"
-                android:layout_marginVertical="5dp"
-                android:layout_weight="1"
-                app:cardCornerRadius="100dp">
+                        <ImageView
+                            android:id="@+id/iv_setting"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            app:srcCompat="@drawable/settings" />
 
-                <LinearLayout
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Setting"
+                            android:fontFamily="@font/poppins"
+                            android:textAlignment="center"
+                            android:textColor="#000"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- History Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/btn_history"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="10dp">
+                    android:elevation="20dp"
+                    android:layout_marginHorizontal="25dp"
+                    android:layout_marginVertical="5dp"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="100dp">
 
-                    <ImageView
-                        android:id="@+id/iv_history"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        app:srcCompat="@drawable/ic_history" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="History"
-                        android:textAlignment="center"
-                        android:textColor="#000"
-                        android:fontFamily="@font/poppins"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="10dp">
 
-            <!-- Logout Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/btn_logout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:elevation="20dp"
-                android:layout_marginHorizontal="25dp"
-                android:layout_marginVertical="5dp"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                app:cardCornerRadius="100dp">
+                        <ImageView
+                            android:id="@+id/iv_history"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            app:srcCompat="@drawable/ic_history" />
 
-                <LinearLayout
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="History"
+                            android:textAlignment="center"
+                            android:textColor="#000"
+                            android:fontFamily="@font/poppins"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Logout Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/btn_logout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="10dp">
+                    android:elevation="20dp"
+                    android:layout_marginHorizontal="25dp"
+                    android:layout_marginVertical="5dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="100dp">
 
-                    <ImageView
-                        android:id="@+id/iv_logout"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        app:srcCompat="@drawable/ic_logout"
-                        app:tint="#FF0B0B" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Logout"
-                        android:fontFamily="@font/poppins"
-                        android:textAlignment="center"
-                        android:textColor="#000"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="10dp">
+
+                        <ImageView
+                            android:id="@+id/iv_logout"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            app:srcCompat="@drawable/ic_logout"
+                            app:tint="#FF0B0B" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Logout"
+                            android:fontFamily="@font/poppins"
+                            android:textAlignment="center"
+                            android:textColor="#000"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+            </LinearLayout>
 
         </LinearLayout>
-
     </LinearLayout>
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
