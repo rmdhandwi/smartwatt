@@ -55,49 +55,62 @@ class HistoryActivity : AppCompatActivity() {
         }
     }
 
+    // Fungsi untuk mengatur RecyclerView yang menampilkan daftar riwayat
     private fun setupRecyclerView() {
+        // Inisialisasi adapter dengan daftar riwayat dan fungsi hapus data
         adapter = RiwayatAdapter(riwayatList) { id -> hapusRiwayat(id) }
+
+        // Atur tata letak RecyclerView menggunakan LinearLayout (vertikal)
         binding.rvRiwayat.layoutManager = LinearLayoutManager(this)
+
+        // Hubungkan adapter ke RecyclerView
         binding.rvRiwayat.adapter = adapter
     }
 
+    // Fungsi untuk menampilkan semua data riwayat dari dua ruangan sekaligus
     private fun tampilkanSemuaData() {
-        riwayatList.clear()
+        riwayatList.clear() // Hapus data sebelumnya
         ambilRiwayat("ruangan1") {
             ambilRiwayat("ruangan2") {
-                urutkanDanTampilkan()
+                urutkanDanTampilkan() // Urutkan dan tampilkan setelah kedua ruangan selesai
             }
         }
     }
 
+    // Fungsi untuk menampilkan data riwayat dari satu ruangan saja
     private fun tampilkanRiwayatPerRuangan(ruangan: String) {
-        riwayatList.clear()
+        riwayatList.clear() // Hapus data sebelumnya
         ambilRiwayat(ruangan) {
-            urutkanDanTampilkan()
+            urutkanDanTampilkan() // Tampilkan hasil setelah selesai ambil data
         }
     }
 
+    // Fungsi untuk mengambil data riwayat dari Firebase berdasarkan ruangan
     private fun ambilRiwayat(ruangan: String, onComplete: () -> Unit) {
+        // Ambil data dari path "riwayat/ruangan" secara sekali baca
         database.child("riwayat/$ruangan")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    // Iterasi setiap anak data dalam snapshot Firebase
                     for (child in snapshot.children) {
                         val model = child.getValue(RiwayatModel::class.java)
                         model?.let {
-                            it.id = child.key ?: ""
-                            riwayatList.add(it)
+                            it.id = child.key ?: "" // Simpan key sebagai ID
+                            riwayatList.add(it) // Tambahkan ke daftar
                             Log.d("RiwayatDebug", "Data ditemukan: $it")
                         }
                     }
-                    onComplete()
+                    onComplete() // Panggil callback setelah selesai
                 }
 
                 override fun onCancelled(error: DatabaseError) {
+                    // Tampilkan pesan jika gagal mengambil data
                     Toast.makeText(this@HistoryActivity, "Gagal ambil data $ruangan", Toast.LENGTH_SHORT).show()
-                    onComplete()
+                    onComplete() // Tetap panggil callback agar tidak menggantung
                 }
             })
     }
+
 
     private fun urutkanDanTampilkan() {
         riwayatList.sortByDescending { "${it.tanggal} ${it.waktu}" }

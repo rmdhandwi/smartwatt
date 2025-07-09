@@ -50,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:hint="Masukkan Username"
+            android:hint="Masukkan Email"
             android:inputType="textEmailAddress"
             android:padding="14dp"
             android:background="@drawable/input_background"

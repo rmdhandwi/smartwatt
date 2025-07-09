@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pressAnim: android.view.animation.Animation
     private lateinit var releaseAnim: android.view.animation.Animation
 
-    private val relayStates = BooleanArray(4) { false }
+    private val relayStates = BooleanArray(2) { false }
     private val CHANNEL_ID = "smartwatt_channel"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
         }
-
 
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance().reference
@@ -111,18 +110,6 @@ class MainActivity : AppCompatActivity() {
             updateRelayStateInFirebase("relay2", relayStates[1])
         }
 
-        binding.btnRelay3.setOnClickListener {
-            relayStates[2] = !relayStates[2]
-            toggleRelay(binding.btnRelay3, relayStates[2])
-            updateRelayStateInFirebase("relay3", relayStates[2])
-        }
-
-        binding.btnRelay4.setOnClickListener {
-            relayStates[3] = !relayStates[3]
-            toggleRelay(binding.btnRelay4, relayStates[3])
-            updateRelayStateInFirebase("relay4", relayStates[3])
-        }
-
         binding.btnZonaA.setOnClickListener { toggleRuangan() }
         binding.btnZonaB.setOnClickListener { toggleRuangan() }
     }
@@ -142,10 +129,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateRelayStateInFirebase(relayName: String, state: Boolean) {
         val path = when (relayName) {
-            "relay1" -> "/monitoring/ruangan1/relay1"
-            "relay2" -> "/monitoring/ruangan1/relay2"
-            "relay3" -> "/monitoring/ruangan2/relay3"
-            "relay4" -> "/monitoring/ruangan2/relay4"
+            "relay1" -> "/monitoring/ruangan1/relay"
+            "relay2" -> "/monitoring/ruangan2/relay"
             else -> ""
         }
         if (path.isNotEmpty()) {
@@ -264,25 +249,44 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
+    private fun matikanRelayDanDisableTombol(relayPath: String, button: android.widget.Button) {
+        // Matikan relay di Firebase
+        database.child("monitoring").child(relayPath).child("relay").setValue(false)
+
+        // Nonaktifkan tombol di UI
+        button.isEnabled = false
+        button.text = "OFF"
+        button.setBackgroundResource(R.drawable.btn_off)
+    }
+
+
     private fun listenToFirebaseData() {
+        // Referensi ke node "ruangan1" di Firebase
         val ruangan1Ref = database.child("monitoring").child("ruangan1")
+        // Referensi ke node "ruangan2" di Firebase
         val ruangan2Ref = database.child("monitoring").child("ruangan2")
 
+        // Listener untuk mendengarkan perubahan data pada "ruangan1"
         ruangan1Ref.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val volt = snapshot.child("tegangan").getValue(Float::class.java) ?: 0f
                 val amper = snapshot.child("arus").getValue(Float::class.java) ?: 0f
                 val watt = snapshot.child("daya").getValue(Float::class.java) ?: 0f
+                val relayStatus = snapshot.child("relay").getValue(Boolean::class.java) ?: false
 
-                binding.txtVoltA.text = "${volt} V"
-                binding.txtAmperA.text = "${amper} A"
-                binding.txtWattA.text = "${watt} W"
+                binding.txtVoltA.text = "$volt V"
+                binding.txtAmperA.text = "$amper A"
+                binding.txtWattA.text = "$watt W"
 
                 if (watt > batasRuangan1) {
-                    showNotification(1, "Peringatan Daya - Ruangan 1", "Daya melebihi ${batasRuangan1}W di Ruangan 1!")
+                    showNotification(
+                        1,
+                        "Peringatan Daya - Ruangan 1",
+                        "Daya melebihi ${batasRuangan1}W di Ruangan 1!"
+                    )
                     simpanRiwayat("ruangan1", volt, amper, watt)
+//                    matikanRelayDanDisableTombol("ruangan1", binding.btnRelay1)
                 }
-
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -290,19 +294,27 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+
+        // Listener untuk mendengarkan perubahan data pada "ruangan2"
         ruangan2Ref.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val volt = snapshot.child("tegangan").getValue(Float::class.java) ?: 0f
                 val amper = snapshot.child("arus").getValue(Float::class.java) ?: 0f
                 val watt = snapshot.child("daya").getValue(Float::class.java) ?: 0f
+                val relayStatus = snapshot.child("relay").getValue(Boolean::class.java) ?: false
 
-                binding.txtVoltB.text = "${volt} V"
-                binding.txtAmperB.text = "${amper} A"
-                binding.txtWattB.text = "${watt} W"
+                binding.txtVoltB.text = "$volt V"
+                binding.txtAmperB.text = "$amper A"
+                binding.txtWattB.text = "$watt W"
 
                 if (watt > batasRuangan2) {
-                    showNotification(2, "Peringatan Daya - Ruangan 2", "Daya melebihi ${batasRuangan2}W di Ruangan 2!")
+                    showNotification(
+                        2,
+                        "Peringatan Daya - Ruangan 2",
+                        "Daya melebihi ${batasRuangan2}W di Ruangan 2!"
+                    )
                     simpanRiwayat("ruangan2", volt, amper, watt)
+//                    matikanRelayDanDisableTombol("ruangan2", binding.btnRelay2)
                 }
             }
 
@@ -310,6 +322,8 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, "Gagal membaca data Ruangan 2", Toast.LENGTH_SHORT).show()
             }
         })
+
     }
+
 
 }

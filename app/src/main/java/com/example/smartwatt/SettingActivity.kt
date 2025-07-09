@@ -63,38 +63,55 @@ class SettingActivity : AppCompatActivity() {
         }
     }
 
+    // Fungsi untuk memperbarui data ambang batas ke Firebase
     private fun updateData() {
+        // Ambil input dari EditText, ubah ke integer jika valid
         val ruangan1 = binding.edtAmbang1.text.toString().toIntOrNull()
         val ruangan2 = binding.edtAmbang2.text.toString().toIntOrNull()
-        val id = currentEditingId
+        val id = currentEditingId // ID data yang sedang diedit
+
+        // Validasi input (tidak boleh kosong/null)
         if (ruangan1 == null || ruangan2 == null || id == null) {
             Toast.makeText(this, "Data tidak valid", Toast.LENGTH_SHORT).show()
             return
         }
 
+        // Ambil tanggal hari ini dalam format "dd-MM-yyyy"
         val tanggal = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
+
+        // Buat objek data untuk disimpan ke Firebase
         val data = SettingModel(id, tanggal, ruangan1, ruangan2)
 
+        // Simpan data ke Firebase berdasarkan ID-nya
         database.child(id).setValue(data).addOnSuccessListener {
             Toast.makeText(this, "Data diperbarui", Toast.LENGTH_SHORT).show()
-            clearInput()
+            clearInput() // Kosongkan input setelah berhasil update
         }
     }
 
+    // Fungsi untuk mengambil semua data ambang batas dari Firebase
     private fun ambilData() {
+        // Dengarkan perubahan data pada node Firebase
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                ambangList.clear()
+                ambangList.clear() // Kosongkan list sebelum menambahkan data baru
+
+                // Iterasi setiap item data di Firebase
                 for (item in snapshot.children) {
                     val data = item.getValue(SettingModel::class.java)
                     if (data != null) ambangList.add(data)
                 }
+
+                // Update tampilan adapter, urutkan berdasarkan tanggal terbaru
                 adapter.updateData(ambangList.sortedByDescending { it.tanggal })
             }
 
-            override fun onCancelled(error: DatabaseError) {}
+            override fun onCancelled(error: DatabaseError) {
+                // Bisa ditambahkan log atau pesan error jika perlu
+            }
         })
     }
+
 
     private fun deleteData(item: SettingModel) {
         AlertDialog.Builder(this)
