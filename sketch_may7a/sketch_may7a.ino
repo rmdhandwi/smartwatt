@@ -7,8 +7,8 @@
 
 Adafruit_ADS1115 ads;
 
-#define WIFI_SSID "GH"
-#define WIFI_PASSWORD "panipu123"
+#define WIFI_SSID "Anishaa"
+#define WIFI_PASSWORD "12122002"
 #define FIREBASE_HOST "https://smartwatt-b1cca-default-rtdb.firebaseio.com"
 #define FIREBASE_AUTH "AIzaSyCqBaNp2C5u-SNDqJmbbayN0S7t64RXWTo"
 
@@ -20,9 +20,9 @@ Ticker dataTicker;
 volatile bool doSendData = false;
 
 // Kalibrasi Sensor
-const float ZMPT101B_SCALE = 312.5;
-const float ACS712_SENSITIVITY = 0.100;
-const float ADC_REF_VOLTAGE = 4.096;
+const float ZMPT101B_SCALE = 95.5;        // 🔧 Kalibrasi skala tegangan (ubah sesuai hasil pengukuran)
+const float ACS712_SENSITIVITY = 0.100;    // Sensitivitas ACS712 20A
+const float ADC_REF_VOLTAGE = 4.096;       // Referensi ADS1115 (4.096V jika GAIN_ONE)
 const float ADC_RESOLUTION = 32767.0;
 const int NUM_SAMPLES = 100;
 
@@ -36,7 +36,7 @@ void IRAM_ATTR triggerData() {
 }
 
 void setup() {
-  Serial.begin(115200);  // 🔧 Tampilkan data ke serial monitor
+  Serial.begin(115200);
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Menghubungkan WiFi");
@@ -49,6 +49,7 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   Wire.begin(D2, D1);
+  ads.setGain(GAIN_ONE);  // ±4.096V (ubah jika perlu)
   ads.begin();
 
   pinMode(RELAY1_PIN, OUTPUT);
@@ -60,7 +61,6 @@ void setup() {
   Firebase.reconnectWiFi(true);
 
   autoCalibrateMidpoint();
-
   Serial.print("Offset arus (vMid): ");
   Serial.println(vMid, 4);
 
@@ -102,7 +102,6 @@ void ruanganHandler(String ruangan, uint8_t chVolt, uint8_t chCurr, int pinRelay
 
   kontrolRelay(ruangan, pinRelay);
 
-  // Pembulatan ke 2 angka di belakang koma
   float v_rounded = round(v * 100) / 100.0;
   float i_rounded = round(i * 100) / 100.0;
   float p_rounded = round(p * 100) / 100.0;
@@ -110,14 +109,10 @@ void ruanganHandler(String ruangan, uint8_t chVolt, uint8_t chCurr, int pinRelay
   Serial.printf("[%s] V = %.2f V\tI = %.2f A\tP = %.2f W\n", ruangan.c_str(), v_rounded, i_rounded, p_rounded);
 
   String path = "/monitoring/" + ruangan + "/";
-
-  // Tetap kirim sebagai number (float), tapi sudah dibulatkan
   Firebase.setFloat(fbdo, path + "tegangan", v_rounded);
   Firebase.setFloat(fbdo, path + "arus", i_rounded);
   Firebase.setFloat(fbdo, path + "daya", p_rounded);
 }
-
-
 
 float readVoltage(uint8_t channel) {
   float sum = 0;
@@ -125,10 +120,17 @@ float readVoltage(uint8_t channel) {
     int16_t raw = ads.readADC_SingleEnded(channel);
     float voltage = (raw * ADC_REF_VOLTAGE) / ADC_RESOLUTION;
     sum += voltage * voltage;
+
+    // Debug untuk kalibrasi
+    if (i < 5) {
+      Serial.printf("ADC Raw: %d\tVolt: %.4f\n", raw, voltage);
+    }
     delay(1);
   }
   float rms = sqrt(sum / NUM_SAMPLES);
-  return rms * ZMPT101B_SCALE;
+  float hasil = rms * ZMPT101B_SCALE;
+  Serial.printf("RMS Tegangan: %.4f V\t=> Setelah kalibrasi: %.2f V\n", rms, hasil);
+  return hasil;
 }
 
 float readCurrent(uint8_t channel) {
@@ -146,7 +148,7 @@ float readCurrent(uint8_t channel) {
 
 void kontrolRelay(String ruangan, int pinRelay) {
   String path = "/monitoring/" + ruangan + "/relay";
-  if (Firebase.getBool(fbdo, path)) {
+  if (Firebase.getBool(fbdo, path)) { 
     bool status = fbdo.boolData();
     digitalWrite(pinRelay, status ? LOW : HIGH);
     Serial.printf("[%s] Relay: %s\n", ruangan.c_str(), status ? "ON" : "OFF");

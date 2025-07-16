@@ -22,6 +22,8 @@ import com.google.firebase.database.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
+import android.graphics.Color
+import android.graphics.PorterDuff
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -30,7 +32,6 @@ class MainActivity : AppCompatActivity() {
     private var ambangId: String = ""
     private var batasRuangan1: Float = 0f
     private var batasRuangan2: Float = 0f
-
 
     private lateinit var pressAnim: android.view.animation.Animation
     private lateinit var releaseAnim: android.view.animation.Animation
@@ -59,18 +60,49 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun toggleRuangan() {
-        if (binding.zonaA.isVisible) {
-            binding.zonaA.visibility = View.GONE
-            binding.zonaB.visibility = View.VISIBLE
-            binding.txtZona.text = "Ruangan 2"
-            binding.btnZonaA.text = "Ruangan 1"
+        val ruanganSatuAktif = binding.zonaA.isVisible     // Apakah sekarang Ruangan 1 yang sedang tampil?
+
+        if (ruanganSatuAktif) {
+            /*  --- Beralih ke Ruangan 2 --- */
+            binding.zonaA.visibility   = View.GONE
+            binding.zonaB.visibility   = View.VISIBLE
+
+            binding.txtZone.text       = "Ruangan 2"
+            binding.btnZonaA.text      = "Ke Ruangan 1"     // Tombol kini mengarah balik ke Ruangan 1
+
+            binding.txtBatas.visibility  = View.VISIBLE     // Batas Ruangan2
+            binding.txtBatas2.visibility = View.GONE        // Sembunyikan batas Ruangan1
+
+            binding.btnRelay1.visibility = View.GONE
+            binding.btnRelay2.visibility = View.VISIBLE
+
+            binding.listrik1.visibility  = View.GONE
+            binding.listrik2.visibility  = View.VISIBLE
+
+            binding.txtRelay.text     = "Relay Ruangan 2"
+
         } else {
-            binding.zonaA.visibility = View.VISIBLE
-            binding.zonaB.visibility = View.GONE
-            binding.txtZona.text = "Ruangan 1"
-            binding.btnZonaB.text = "Ruangan 2"
+            /*  --- Beralih ke Ruangan1 --- */
+            binding.zonaA.visibility   = View.VISIBLE
+            binding.zonaB.visibility   = View.GONE
+
+            binding.txtZone.text       = "Ruangan 1"
+            binding.btnZonaB.text      = "Ke Ruangan 2"     // Tombol kini mengarah ke Ruangan2
+
+            binding.txtBatas.visibility  = View.GONE        // Batas Ruangan1 (disembunyikan)
+            binding.txtBatas2.visibility = View.VISIBLE     // Tampilkan batas Ruangan2
+
+            binding.btnRelay1.visibility = View.VISIBLE
+            binding.btnRelay2.visibility = View.GONE
+
+            binding.listrik1.visibility  = View.VISIBLE
+            binding.listrik2.visibility  = View.GONE
+
+            binding.txtRelay.text     = "Relay Ruangan 1"
         }
     }
+
+
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -240,6 +272,9 @@ class MainActivity : AppCompatActivity() {
                         val r2 = item.child("ruangan2").getValue(Int::class.java) ?: 0f
                         batasRuangan1 = r1.toFloat()
                         batasRuangan2 = r2.toFloat()
+
+                        binding.txtBatas.text = "${r1} Watt"
+                        binding.txtBatas2.text = "${r2} Watt"
                     }
                 }
 
@@ -259,6 +294,21 @@ class MainActivity : AppCompatActivity() {
         button.setBackgroundResource(R.drawable.btn_off)
     }
 
+    private fun simpanRiwayatKwh(node: String, nilaiKwh: Float) {
+        val timestamp = System.currentTimeMillis()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val waktu = dateFormat.format(Date(timestamp))
+
+        val riwayatRef = database.child("riwayat").child(node).push()
+        val riwayatData = mapOf(
+            "kwh" to nilaiKwh,
+            "waktu" to waktu
+        )
+
+        riwayatRef.setValue(riwayatData)
+    }
+
+
 
     private fun listenToFirebaseData() {
         // Referensi ke node "ruangan1" di Firebase
@@ -266,17 +316,35 @@ class MainActivity : AppCompatActivity() {
         // Referensi ke node "ruangan2" di Firebase
         val ruangan2Ref = database.child("monitoring").child("ruangan2")
 
+        val currentMonth = Calendar.getInstance().get(Calendar.MONTH)
+        val sharedPrefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val lastMonth = sharedPrefs.getInt("last_reset_month", -1)
+
         // Listener untuk mendengarkan perubahan data pada "ruangan1"
         ruangan1Ref.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val volt = snapshot.child("tegangan").getValue(Float::class.java) ?: 0f
                 val amper = snapshot.child("arus").getValue(Float::class.java) ?: 0f
                 val watt = snapshot.child("daya").getValue(Float::class.java) ?: 0f
+                val kwh = snapshot.child("kwh").getValue(Float::class.java) ?: 0f
+                val listrik = snapshot.child("listrik").getValue(Boolean::class.java) ?: false
                 val relayStatus = snapshot.child("relay").getValue(Boolean::class.java) ?: false
 
                 binding.txtVoltA.text = "$volt V"
                 binding.txtAmperA.text = "$amper A"
                 binding.txtWattA.text = "$watt W"
+                binding.txtKwh.text = "$kwh"
+
+                if (!listrik) {
+                    binding.txtListrik.text = "Daya Listrik OFF"
+                    binding.txtListrik.setTextColor(Color.RED)
+                    binding.ivListrik.setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN)
+                } else {
+                    binding.txtListrik.text = "Daya Listrik ON"
+                    binding.txtListrik.setTextColor(Color.GREEN)
+                    binding.ivListrik.setColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN)
+                }
+
 
                 if (watt > batasRuangan1) {
                     showNotification(
@@ -287,6 +355,20 @@ class MainActivity : AppCompatActivity() {
                     simpanRiwayat("ruangan1", volt, amper, watt)
 //                    matikanRelayDanDisableTombol("ruangan1", binding.btnRelay1)
                 }
+
+                // Cek pergantian bulan untuk ruangan 1
+                if (currentMonth != lastMonth) {
+                    // Simpan riwayat sebelum reset
+                    simpanRiwayatKwh("kwh1", kwh)
+
+                    // Reset kwh di Firebase
+                    ruangan1Ref.child("kwh").setValue(0f)
+
+                    // Simpan bulan ke local preferences
+                    sharedPrefs.edit().putInt("last_reset_month", currentMonth).apply()
+
+                    Toast.makeText(this@MainActivity, "KWH Ruangan 1 direset dan disimpan ke riwayat", Toast.LENGTH_SHORT).show()
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -295,17 +377,31 @@ class MainActivity : AppCompatActivity() {
         })
 
 
+
         // Listener untuk mendengarkan perubahan data pada "ruangan2"
         ruangan2Ref.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val volt = snapshot.child("tegangan").getValue(Float::class.java) ?: 0f
                 val amper = snapshot.child("arus").getValue(Float::class.java) ?: 0f
                 val watt = snapshot.child("daya").getValue(Float::class.java) ?: 0f
+                val kwh = snapshot.child("kwh").getValue(Float::class.java) ?: 0f
+                val listrik2 = snapshot.child("listrik").getValue(Boolean::class.java) ?: false
                 val relayStatus = snapshot.child("relay").getValue(Boolean::class.java) ?: false
 
                 binding.txtVoltB.text = "$volt V"
                 binding.txtAmperB.text = "$amper A"
                 binding.txtWattB.text = "$watt W"
+                binding.txtKwhB.text = "$kwh"
+
+                if (!listrik2) {
+                    binding.txtListrik2.text = "Daya Listrik OFF"
+                    binding.txtListrik2.setTextColor(Color.RED)
+                    binding.ivListrik2.setColorFilter(Color.RED, PorterDuff.Mode.SRC_IN)
+                } else {
+                    binding.txtListrik2.text = "Daya Listrik ON"
+                    binding.txtListrik2.setTextColor(Color.GREEN)
+                    binding.ivListrik2.setColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN)
+                }
 
                 if (watt > batasRuangan2) {
                     showNotification(
@@ -316,6 +412,17 @@ class MainActivity : AppCompatActivity() {
                     simpanRiwayat("ruangan2", volt, amper, watt)
 //                    matikanRelayDanDisableTombol("ruangan2", binding.btnRelay2)
                 }
+
+                if (currentMonth != lastMonth) {
+                    // Simpan riwayat sebelum reset
+                    simpanRiwayatKwh("kwh2", kwh)
+                    ruangan2Ref.child("kwh").setValue(0f)
+                    sharedPrefs.edit().putInt("last_reset_month", currentMonth).apply()
+
+                    Toast.makeText(this@MainActivity, "KWH Ruangan 2 direset karena bulan baru", Toast.LENGTH_SHORT).show()
+                }
+
+
             }
 
             override fun onCancelled(error: DatabaseError) {

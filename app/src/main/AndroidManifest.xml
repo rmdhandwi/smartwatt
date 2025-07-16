@@ -16,6 +16,9 @@
         android:theme="@style/Theme.SmartWatt"
         tools:targetApi="31">
         <activity
+            android:name=".RiwayatKwhActivity"
+            android:exported="false" />
+        <activity
             android:name=".SettingActivity"
             android:exported="false" />
         <activity

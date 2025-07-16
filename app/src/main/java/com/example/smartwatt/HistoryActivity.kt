@@ -1,5 +1,6 @@
 package com.example.smartwatt
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -36,6 +37,10 @@ class HistoryActivity : AppCompatActivity() {
 
         binding.btnSemuaZona.setOnClickListener {
             tampilkanSemuaData()
+        }
+
+        binding.btnKwh.setOnClickListener {
+            startActivity(Intent(this, RiwayatKwhActivity::class.java))
         }
 
         binding.btnHapusSemua.setOnClickListener {
